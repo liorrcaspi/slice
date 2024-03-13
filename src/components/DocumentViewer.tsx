@@ -5,13 +5,16 @@ import DocViewer, {
     DocViewerRenderers,
     IDocument,
 } from "@cyntler/react-doc-viewer";
-import { DocViewerType } from "../global/types";
 
 type DocumentViewerProps = {
     docs: IDocument[];
+    headerComponent: any;
 };
 
-export const DocumentViewer = ({ docs }: DocumentViewerProps) => {
+export const DocumentViewer = ({
+    docs,
+    headerComponent,
+}: DocumentViewerProps) => {
     console.log(docs);
     return (
         <DocViewer
@@ -19,7 +22,7 @@ export const DocumentViewer = ({ docs }: DocumentViewerProps) => {
             documents={docs}
             config={{
                 header: {
-                    // disableHeader: true,
+                    disableHeader: true,
                 },
             }}
             pluginRenderers={DocViewerRenderers}

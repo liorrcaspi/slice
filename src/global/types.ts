@@ -13,10 +13,17 @@ export type CheckboxType = {
 };
 
 export type FilterDropdownType = {
-    name: string;
     checkboxes: CheckboxType[];
     allChecked: boolean;
     setAllChecked: any;
+    children?: any;
+};
+
+export type FilterDropdownHeaderType = {
+    country: string;
+    title: string;
+    currentIndex: number;
+    length: number;
 };
 
 export type TaxType = {

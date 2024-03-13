@@ -1,14 +1,28 @@
 "use client";
 
 import { DocumentViewer } from "@/components/DocumentViewer";
-import { FilterDropdown } from "@/components/FilterDropdown";
-import { grantsExample } from "@/global/consts";
+import { DocumentViewerHeader } from "@/components/DocumentViewerHeader";
+import {
+    FilterDropdown,
+    FilterDropdownHeader,
+} from "@/components/FilterDropdown";
+import { Button } from "@/components/ui/button";
+import { countryCodeToSvgArray, grantsExample } from "@/global/consts";
 import { CheckboxType, GrantType, TaxType } from "@/global/types";
+import {
+    getCheckedCheckboxes,
+    grantsToCheckboxes,
+    grantsToDocs,
+    isGrantInCheckedRules,
+} from "@/lib/utils";
 import { IDocument } from "@cyntler/react-doc-viewer";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { object } from "prop-types";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-    const [docs, setDocs] = useState<IDocument[]>();
+    const [grants, setGrants] = useState<GrantType[]>(grantsExample);
+    const [currentGrantIndex, setCurrentGrantIndex] = useState<number>(0);
     const [allChecked, setAllChecked] = useState<boolean>(true);
 
     const handleSetChecked = (name: string) => {
@@ -22,72 +36,65 @@ export default function Home() {
             setCheckboxes([...newCheckboxes]);
     };
 
-    const [checkboxes, setCheckboxes] = useState<CheckboxType[]>([
-        {
-            name: "Rule A",
-            checked: true,
-            setChecked: handleSetChecked,
-            items: ["asd", "gfd", "gdg"],
-        },
-        {
-            name: "Rule B",
-            checked: true,
-            setChecked: handleSetChecked,
-            items: ["asd", "gfd", "gdg"],
-        },
-        {
-            name: "Rule C",
-            checked: true,
-            setChecked: handleSetChecked,
-            items: ["asd", "gfd", "gdg"],
-        },
-    ]);
-
-    const getCheckedCheckboxes = (checkboxes: CheckboxType[]) => {
-        const checkedCheckboxes = checkboxes.filter(
-            (checkbox) => checkbox.checked
-        );
-        return checkedCheckboxes.map((checkedCheckbox) => checkedCheckbox.name);
-    };
-
-    const grantsToDocs = (grants: GrantType[]): IDocument[] => {
-        return grants.map((grant) => grant.doc);
-    };
-
-    const isGrantInCheckedRules = (grant: GrantType) => {
-        let isInRules = false;
-        grant.taxRules.forEach((taxRule) => {
-            console.log("taxRule");
-            console.log(taxRule);
-            isInRules =
-                isInRules ||
-                getCheckedCheckboxes(checkboxes).includes(taxRule.taxRuleName);
-        });
-        return isInRules;
-    };
+    const [checkboxes, setCheckboxes] = useState<CheckboxType[]>(
+        grantsToCheckboxes(grants, handleSetChecked)
+    );
 
     useEffect(() => {
         const checkedGrants = grantsExample.filter((grant) =>
-            isGrantInCheckedRules(grant)
+            isGrantInCheckedRules(checkboxes, grant)
         );
-        setDocs(
-            allChecked
-                ? grantsToDocs(grantsExample)
-                : grantsToDocs(checkedGrants)
-        );
+        setGrants(allChecked ? grantsExample : checkedGrants);
+        setCurrentGrantIndex(0);
     }, [checkboxes, allChecked]);
 
     return (
-        <main className="flex flex-col justify-between h-full p-24 gap-4">
-            <div className="flex flex-row justify-center">
+        <main className="flex flex-col justify-between h-full p-24 ">
+            <div className="flex flex-row justify-center bg-[#F0F3FE] rounded-t-lg p-1">
+                <Button
+                    variant="ghost"
+                    className="hover:bg-slate-200"
+                    size="icon"
+                    disabled={currentGrantIndex === 0}
+                    onClick={() => setCurrentGrantIndex(currentGrantIndex - 1)}
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
                 <FilterDropdown
-                    name="open"
                     checkboxes={checkboxes}
                     allChecked={allChecked}
                     setAllChecked={setAllChecked}
-                />
+                >
+                    <FilterDropdownHeader
+                        country={
+                            countryCodeToSvgArray[
+                                grants[currentGrantIndex].taxRules[0]
+                                    .countryCode - 1
+                            ]
+                        }
+                        title={
+                            grants
+                                ? grants[currentGrantIndex].stakeholderName
+                                : ""
+                        }
+                        currentIndex={currentGrantIndex + 1}
+                        length={grants.length}
+                    />
+                </FilterDropdown>
+                <Button
+                    variant="ghost"
+                    className="hover:bg-slate-200"
+                    size="icon"
+                    disabled={currentGrantIndex === grants.length - 1}
+                    onClick={() => setCurrentGrantIndex(currentGrantIndex + 1)}
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
             </div>
-            <DocumentViewer docs={docs ?? []} />
+            <DocumentViewer
+                docs={grantsToDocs([grants[currentGrantIndex]]) ?? []}
+                headerComponent={DocumentViewerHeader}
+            />
         </main>
     );
 }
